@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { DEFAULT_WHEEL_SLICES, WHEEL_QUESTIONS, WheelSlice, WheelQuestion } from '../../data/luckyWheelData';
 import { sound } from '../../utils/audio';
 import { fireBigConfetti, fireConfetti } from '../../utils/confetti';
-import { Play, Sparkles, CheckCircle2, RotateCw, Users } from 'lucide-react';
+import { Play, Sparkles, RotateCw, Users } from 'lucide-react';
+import { KhmerCorner, KhmerDivider } from '../ui/KhmerKbach';
 
 interface Props {
   onAddStars: (amount: number) => void;
@@ -16,7 +17,6 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
   const [taskModal, setTaskModal] = useState<string | null>(null);
   const [bonusModal, setBonusModal] = useState<number | null>(null);
 
-  // Classroom student names mode
   const [isClassMode, setIsClassMode] = useState(false);
   const [students, setStudents] = useState<string[]>([
     'ចរិយា', 'សុខា', 'វិចិត្រ', 'កល្យាណ', 'សុវណ្ណ', 'រចនា', 'ដារ៉ូ', 'ធីតា'
@@ -44,9 +44,18 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
     const sliceAngle = (2 * Math.PI) / numSlices;
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = centerX - 10;
+    const radius = centerX - 12;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Outer golden Khmer ornamental rim
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fill();
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 3;
+    ctx.stroke();
 
     currentSlices.forEach((slice, idx) => {
       const angle = idx * sliceAngle;
@@ -59,7 +68,7 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
 
       // Border line
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
       // Text label
@@ -68,36 +77,40 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
       const midAngle = angle + sliceAngle / 2;
       ctx.rotate(midAngle);
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 15px "Kantumruy Pro", sans-serif';
-      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.font = 'bold 14px "Kantumruy Pro", sans-serif';
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
       ctx.shadowBlur = 4;
       ctx.textBaseline = 'middle';
 
-      // Always orient text so it is upright and easy to read
       if (midAngle > Math.PI / 2 && midAngle < (3 * Math.PI) / 2) {
         ctx.rotate(Math.PI);
         ctx.textAlign = 'left';
-        ctx.fillText(slice.label, -(radius - 25), 0);
+        ctx.fillText(slice.label, -(radius - 22), 0);
       } else {
         ctx.textAlign = 'right';
-        ctx.fillText(slice.label, radius - 25, 0);
+        ctx.fillText(slice.label, radius - 22, 0);
       }
       ctx.restore();
     });
 
-    // Center peg
+    // Center Golden Peg
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 24, 0, 2 * Math.PI);
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.arc(centerX, centerY, 22, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fef3c7';
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
     ctx.fill();
-    ctx.strokeStyle = '#f59e0b';
+    ctx.strokeStyle = '#b45309';
     ctx.lineWidth = 4;
     ctx.stroke();
+
+    // Central jewel
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = '#d97706';
+    ctx.fill();
   }, [currentSlices, isClassMode]);
 
-  // Spin execution
   const handleSpin = () => {
     if (isSpinning) return;
     setIsSpinning(true);
@@ -109,13 +122,12 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
 
     sound.playClick();
 
-    const fullRotations = 5 + Math.floor(Math.random() * 4); // 5 to 8 turns
+    const fullRotations = 5 + Math.floor(Math.random() * 4);
     const extraDegrees = Math.floor(Math.random() * 360);
     const totalAddedRotation = fullRotations * 360 + extraDegrees;
     const newRotation = rotation + totalAddedRotation;
     setRotation(newRotation);
 
-    // Audio ticking simulation
     let tickCount = 0;
     const tickInterval = setInterval(() => {
       sound.playTick();
@@ -123,14 +135,10 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
       if (tickCount > 24) clearInterval(tickInterval);
     }, 120);
 
-    // Wheel stops after 3.5s
     setTimeout(() => {
       setIsSpinning(false);
       clearInterval(tickInterval);
 
-      // Determine which slice won
-      // Canvas draws slice 0 from 0 to sliceAngle (right side, 3 o'clock).
-      // Pointer is at the top (12 o'clock, which is -90 deg or 270 deg).
       const finalAngle = (newRotation % 360);
       const effectiveAngle = (360 - (finalAngle % 360) + 270) % 360;
       const sliceSize = 360 / currentSlices.length;
@@ -163,7 +171,6 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
     }, 3500);
   };
 
-  // Answer question modal
   const handleAnswerQuestion = (opt: string) => {
     if (!questionModal) return;
     if (opt === questionModal.answer) {
@@ -179,18 +186,25 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-3xl p-6 shadow-md border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-fuchsia-100 text-fuchsia-600 flex items-center justify-center text-3xl">
+      <div className="relative bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-fuchsia-300 flex flex-col sm:flex-row items-center justify-between gap-3 overflow-hidden">
+        <div className="absolute top-0 left-0 pointer-events-none">
+          <KhmerCorner className="w-6 h-6 text-fuchsia-500/70" />
+        </div>
+        <div className="absolute top-0 right-0 pointer-events-none rotate-90">
+          <KhmerCorner className="w-6 h-6 text-fuchsia-500/70" />
+        </div>
+
+        <div className="flex items-center gap-2.5 sm:gap-3 z-10 w-full sm:w-auto">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-fuchsia-100 text-fuchsia-600 flex items-center justify-center text-2xl sm:text-3xl border border-fuchsia-300 flex-shrink-0">
             🎡
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-black text-slate-800">
+            <h2 className="text-base sm:text-2xl font-black text-slate-800 leading-tight">
               កងបង្វិលសំណួរមហាសំណាង
             </h2>
-            <p className="text-xs text-slate-500">បង្វិលកងចៃដន្យដើម្បីឆ្លើយសំណួរ ឬហៅឈ្មោះសិស្ស</p>
+            <p className="text-[11px] sm:text-xs text-slate-500">បង្វិលកងចៃដន្យ ឬប្ដូរជាហៅឈ្មោះសិស្ស</p>
           </div>
         </div>
 
@@ -200,7 +214,7 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
             sound.playClick();
             setIsClassMode(!isClassMode);
           }}
-          className={`px-4 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition ${
+          className={`w-full sm:w-auto px-4 py-2 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 z-10 ${
             isClassMode
               ? 'bg-fuchsia-600 text-white shadow-md'
               : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -211,20 +225,20 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
         </button>
       </div>
 
-      {/* Spinner Stage */}
-      <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
-        {/* Top Pointer Indicator */}
-        <div className="z-20 -mb-4 text-4xl filter drop-shadow-md">
+      {/* Spinner Stage (Mobile optimized) */}
+      <div className="bg-white rounded-3xl p-4 sm:p-8 shadow-lg border-2 border-fuchsia-200 flex flex-col items-center justify-center relative overflow-hidden">
+        {/* Top Pointer */}
+        <div className="z-20 -mb-3 text-3xl sm:text-4xl filter drop-shadow-md">
           🔻
         </div>
 
-        {/* Wheel Canvas Container */}
-        <div className="relative p-2">
+        {/* Scaled Wheel for mobile */}
+        <div className="relative p-1 max-w-full flex items-center justify-center">
           <canvas
             ref={canvasRef}
-            width={340}
-            height={340}
-            className="rounded-full shadow-2xl transition-transform duration-[3500ms] cubic-bezier(0.15, 0.9, 0.2, 1)"
+            width={310}
+            height={310}
+            className="rounded-full shadow-2xl transition-transform duration-[3500ms] w-[270px] h-[270px] sm:w-[310px] sm:h-[310px]"
             style={{
               transform: `rotate(${rotation}deg)`,
               transitionTimingFunction: 'cubic-bezier(0.1, 0.9, 0.2, 1)',
@@ -232,28 +246,28 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
           />
         </div>
 
-        {/* Spin Button */}
-        <div className="mt-8">
+        {/* Big Touch-Friendly Spin Button */}
+        <div className="mt-5 sm:mt-8 w-full max-w-xs">
           <button
             disabled={isSpinning}
             onClick={handleSpin}
-            className={`px-10 py-4 rounded-3xl text-xl font-black text-white shadow-xl transition-all transform active:scale-95 flex items-center gap-2 ${
+            className={`w-full py-3.5 sm:py-4 rounded-3xl text-lg sm:text-xl font-black text-white shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2 border-2 border-white/40 ${
               isSpinning
                 ? 'bg-slate-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-fuchsia-600 via-pink-600 to-rose-500 hover:scale-105 hover:shadow-pink-300'
+                : 'bg-gradient-to-r from-fuchsia-600 via-pink-600 to-rose-500 hover:scale-105 shadow-pink-300'
             }`}
           >
-            <RotateCw className={`w-6 h-6 ${isSpinning ? 'animate-spin' : ''}`} />
+            <RotateCw className={`w-5 h-5 sm:w-6 sm:h-6 ${isSpinning ? 'animate-spin' : ''}`} />
             {isSpinning ? 'កំពុងបង្វិល...' : 'ចុចបង្វិលកង!'}
           </button>
         </div>
 
         {/* Winner Student Popup */}
         {selectedStudent && (
-          <div className="mt-6 p-6 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-3xl border-2 border-amber-300 text-center animate-pop max-w-sm">
-            <span className="text-4xl">🎉</span>
-            <p className="text-xs uppercase font-bold text-amber-700 mt-1">សូមអបអរសាទរ!</p>
-            <h4 className="text-2xl font-black text-amber-900 mt-1">
+          <div className="mt-5 p-4 sm:p-6 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-3xl border-2 border-amber-300 text-center animate-pop max-w-sm w-full">
+            <span className="text-3xl sm:text-4xl">🎉</span>
+            <p className="text-[11px] uppercase font-bold text-amber-700 mt-1">សូមអបអរសាទរ!</p>
+            <h4 className="text-xl sm:text-2xl font-black text-amber-900 mt-0.5">
               សិស្សឈ្មោះ « {selectedStudent} »
             </h4>
             <p className="text-xs text-amber-800 mt-1">សូមអញ្ជើញឡើងមកឆ្លើយសំណួរ ឬសម្ដែង!</p>
@@ -262,40 +276,40 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
 
         {/* Bonus Stars Modal */}
         {bonusModal && (
-          <div className="mt-6 p-6 bg-emerald-100 rounded-3xl border-2 border-emerald-300 text-center animate-pop max-w-sm">
-            <span className="text-4xl">🌟</span>
-            <h4 className="text-2xl font-black text-emerald-800 mt-1">
+          <div className="mt-5 p-4 sm:p-6 bg-emerald-100 rounded-3xl border-2 border-emerald-300 text-center animate-pop max-w-sm w-full">
+            <span className="text-3xl sm:text-4xl">🌟</span>
+            <h4 className="text-xl sm:text-2xl font-black text-emerald-800 mt-1">
               ទទួលបាន +{bonusModal} ផ្កាយ!
             </h4>
-            <p className="text-xs text-emerald-700 mt-1">សំណាងធំមែនទែន!</p>
+            <p className="text-xs text-emerald-700 mt-0.5">សំណាងធំមែនទែន!</p>
           </div>
         )}
 
         {/* Fun Task Modal */}
         {taskModal && (
-          <div className="mt-6 p-6 bg-pink-100 rounded-3xl border-2 border-pink-300 text-center animate-pop max-w-sm">
-            <span className="text-4xl">🎶</span>
-            <p className="text-xs uppercase font-bold text-pink-700 mt-1">ភារកិច្ចកម្សាន្ត</p>
-            <h4 className="text-xl font-black text-pink-800 mt-1">« {taskModal} »</h4>
+          <div className="mt-5 p-4 sm:p-6 bg-pink-100 rounded-3xl border-2 border-pink-300 text-center animate-pop max-w-sm w-full">
+            <span className="text-3xl sm:text-4xl">🎶</span>
+            <p className="text-[11px] uppercase font-bold text-pink-700 mt-1">ភារកិច្ចកម្សាន្ត</p>
+            <h4 className="text-lg sm:text-xl font-black text-pink-800 mt-0.5">« {taskModal} »</h4>
           </div>
         )}
       </div>
 
       {/* Question Modal Dialog */}
       {questionModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl space-y-6 animate-pop text-center">
-            <span className="text-4xl">❓</span>
-            <h3 className="text-xl md:text-2xl font-black text-slate-800">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-2xl space-y-4 animate-pop text-center relative border-2 border-amber-300">
+            <span className="text-3xl sm:text-4xl">❓</span>
+            <h3 className="text-lg sm:text-2xl font-black text-slate-800">
               {questionModal.question}
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left">
               {questionModal.options.map((opt) => (
                 <button
                   key={opt}
                   onClick={() => handleAnswerQuestion(opt)}
-                  className="p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 font-black text-slate-800 transition active:scale-95 text-center text-lg"
+                  className="p-3.5 rounded-2xl border-2 border-slate-200 hover:border-fuchsia-400 hover:bg-fuchsia-50 font-black text-slate-800 transition active:scale-95 text-center text-base sm:text-lg min-h-[48px]"
                 >
                   {opt}
                 </button>
@@ -304,7 +318,7 @@ export const LuckyWheel: React.FC<Props> = ({ onAddStars }) => {
 
             <button
               onClick={() => setQuestionModal(null)}
-              className="text-xs text-slate-400 font-bold hover:underline"
+              className="text-xs text-slate-400 font-bold hover:underline block mx-auto pt-2"
             >
               រំលងសំណួរនេះ
             </button>
